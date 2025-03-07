@@ -11,46 +11,29 @@ import SwiftUI
 struct ContentView: View {
   @State private var counter: Int = 0
   @State private var dued: Bool = false
-  var tasks = TaskObject(title: "Go get some omelette", description: "vegan of course", dueDate: "12.01.2025", priority: Priority.low)
-    var body: some View {
-        VStack {
-          HStack {
-            Text("\(tasks.getTitle()) ").font(.title2)
-            
-          }
-          
-            @State var days = tasks.getRemainingDays()
-            
-            if(days < 0){
-              Text("\(abs(days)) due").font(.subheadline)
-            }
-            else {
-              Text("\(days) days remaining").font(.subheadline)
-            }
-
-          HStack {
-            Text("\(tasks.getDescription()) ").font(.title3)
-            Text("\(tasks.getPriority())").font(.title3.bold()).foregroundStyle(.red)
-            //Button(action: void) {
-             // task.setStatus(status: true)
-              //Text("Done")
-            //}
-            Text("\(counter)")
-          }.padding(.horizontal)
-         
-          
-        }
-        .padding()
-        
-    }
+  @State private var task_list: [TaskObject] = [
+    TaskObject(title: "Go get some omelette", description: "vegan of course", dueDate: "12.03.2025", priority: Priority.low),
+    TaskObject(title: "Do laundry", description: "clean your room asap", dueDate: "12.03.2025", priority: Priority.low),
+    TaskObject(title: "go check what needs to be done", description: "vegan of course", dueDate: "12.03.2025", priority: Priority.low),
+    TaskObject(title: "Go get some omelette", description: "vegan of course", dueDate: "12.03.2025", priority: Priority.low),
+    ]
+  var body: some View {
+    VStack {
+      List(task_list)
+      {
+        task in TaskWidget(tasks: task)
+      }
+      Button(action: {addTask()})
+      {
+        Text("Add task");
+      }
+    }.padding(0.7)
   }
-
-
-
-
-
-
-
+  
+  private func addTask() {
+    task_list.append(TaskObject(title: "New task", description: " ", dueDate: "12.03.2025", priority: Priority.low))
+  }
+}
 
 
 #Preview {

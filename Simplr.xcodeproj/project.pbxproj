@@ -47,6 +47,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		C69BB3702D7AEC4D002E8D50 /* Services */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Services; sourceTree = "<group>"; };
 		C6CB01862D7775B6009BBB39 /* Objects */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Objects; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
@@ -98,6 +99,7 @@
 		C6FFF1ED2C7E21B8005C59D7 /* Simplr */ = {
 			isa = PBXGroup;
 			children = (
+				C69BB3702D7AEC4D002E8D50 /* Services */,
 				C6CB01862D7775B6009BBB39 /* Objects */,
 				C6FFF1EE2C7E21B8005C59D7 /* SimplrApp.swift */,
 				C6FFF1F02C7E21B8005C59D7 /* ContentView.swift */,
@@ -148,6 +150,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
+				C69BB3702D7AEC4D002E8D50 /* Services */,
 				C6CB01862D7775B6009BBB39 /* Objects */,
 			);
 			name = Simplr;

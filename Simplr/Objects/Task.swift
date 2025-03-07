@@ -14,15 +14,18 @@ enum Priority{
   case high
 }
 
-struct TaskObject{
+struct TaskObject: Identifiable, Hashable {
+  
   //variables
-  private var title: String
-  private var description: String
-  private var dueDate: String
-  private var priority: Priority
-  private var status: Bool
+  var id: UUID
+  var title: String
+  var description: String
+  var dueDate: String
+  var priority: Priority
+  var status: Bool
 
   init(title: String, description: String, dueDate: String, priority: Priority) {
+    self.id =  UUID()
     self.title = title
     self.description = description
     self.dueDate = dueDate
