@@ -25,7 +25,7 @@ struct TaskWidget : View {
         @State var days = tasks.getRemainingDays()
         
       HStack {
-        Text("\(tasks.getDescription()) ").font(.caption)
+        Text("\(tasks.getDescription()) ").font(.caption).padding(EdgeInsets(top: 0, leading: 15, bottom: 0, trailing: 0))
         Spacer(minLength: 1)
         if(days < 0){
           Text("\(abs(days)) days due").font(.subheadline).foregroundStyle(.red)
