@@ -21,13 +21,13 @@ struct ContentView: View {
     VStack {
       List(task_list)
       {
-        task in TaskWidget(tasks: task)
+        task in TaskWidget(tasks: task).listRowSeparator(.hidden)
       }
       Button(action: {addTask()})
       {
         Text("Add task");
       }
-    }.padding(0.7)
+    }.padding()
   }
   
   private func addTask() {
