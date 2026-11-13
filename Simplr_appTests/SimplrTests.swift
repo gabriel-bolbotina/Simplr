@@ -147,3 +147,71 @@ struct RelationshipTests {
         #expect(tasks.first?.category == nil)
     }
 }
+
+@MainActor
+struct KanbanPlacementTests {
+    let container: ModelContainer
+    let context: ModelContext
+    let board: Board
+
+    init() throws {
+        container = try ModelContainer(
+            for: Board.self, TaskItem.self, Category.self, Shortcut.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        context = container.mainContext
+        board = Board(name: "Board")
+        context.insert(board)
+    }
+
+    private func makeTasks(_ titles: String...) -> [TaskItem] {
+        titles.enumerated().map { index, title in
+            let task = TaskItem(title: title, board: board)
+            task.sortOrder = index
+            context.insert(task)
+            return task
+        }
+    }
+
+    private func column(_ status: TaskStatus) -> [String] {
+        board.sortedTasks.filter { $0.status == status }.map(\.title)
+    }
+
+    @Test func droppingOnColumnAppendsAndChangesStatus() {
+        let tasks = makeTasks("A", "B")
+        tasks[1].move(to: .inProgress)
+
+        board.place(tasks[0], in: .inProgress)
+
+        #expect(tasks[0].status == .inProgress)
+        #expect(column(.inProgress) == ["B", "A"])
+        #expect(column(.todo).isEmpty)
+    }
+
+    @Test func droppingOnCardInsertsBeforeIt() {
+        let tasks = makeTasks("A", "B", "C")
+
+        board.place(tasks[2], in: .todo, before: tasks[0])
+
+        #expect(column(.todo) == ["C", "A", "B"])
+    }
+
+    @Test func droppingIntoDoneCompletesAndBackRestoresProgress() {
+        let task = makeTasks("A")[0]
+        task.setProgress(0.3)
+
+        board.place(task, in: .done)
+        #expect(task.progress == 1)
+
+        board.place(task, in: .inProgress)
+        #expect(task.progress == 0.3)
+    }
+
+    @Test func droppingOnItselfChangesNothing() {
+        let tasks = makeTasks("A", "B")
+
+        board.place(tasks[0], in: .todo, before: tasks[0])
+
+        #expect(column(.todo) == ["A", "B"])
+    }
+}

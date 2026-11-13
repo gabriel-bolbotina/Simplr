@@ -4,6 +4,16 @@
 //
 
 import SwiftUI
+import UniformTypeIdentifiers
+
+/// What gets dragged when a card moves between columns.
+struct TaskDragItem: Codable, Transferable {
+    let id: UUID
+
+    static var transferRepresentation: some TransferRepresentation {
+        CodableRepresentation(contentType: .json)
+    }
+}
 
 struct KanbanView: View {
     let board: Board
@@ -18,13 +28,26 @@ struct KanbanView: View {
                     tasks: board.sortedTasks.filter { $0.status == status },
                     selection: $selection,
                     actions: actions
-                )
+                ) { items, target in
+                    drop(items, into: status, before: target)
+                }
             }
         }
         .padding()
         // Lets ⌫ (onDeleteCommand on the board) reach the selected card.
         .focusable()
         .focusEffectDisabled()
+    }
+
+    private func drop(_ items: [TaskDragItem], into status: TaskStatus, before target: TaskItem?) -> Bool {
+        guard let id = items.first?.id, let task = board.tasks?.first(where: { $0.id == id }) else {
+            return false
+        }
+        withAnimation(.snappy) {
+            board.place(task, in: status, before: target)
+        }
+        selection = id
+        return true
     }
 }
 
@@ -33,6 +56,10 @@ struct KanbanColumn: View {
     let tasks: [TaskItem]
     @Binding var selection: UUID?
     let actions: TaskActions
+    /// Called with the dropped items and the card they were dropped on (nil = end of column).
+    let onDrop: ([TaskDragItem], TaskItem?) -> Bool
+
+    @State private var isTargeted = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -52,13 +79,20 @@ struct KanbanColumn: View {
                             .onTapGesture(count: 2) { actions.edit(task) }
                             .simultaneousGesture(TapGesture().onEnded { selection = task.id })
                             .contextMenu { TaskContextMenu(task: task, actions: actions) }
+                            .draggable(TaskDragItem(id: task.id)) {
+                                KanbanCard(task: task, isSelected: false)
+                                    .frame(width: 240)
+                            }
+                            .dropDestination(for: TaskDragItem.self) { items, _ in
+                                _ = onDrop(items, task)
+                            }
                     }
                 }
                 .padding(4)
             }
             .overlay {
                 if tasks.isEmpty {
-                    Text("No tasks")
+                    Text(isTargeted ? "Drop here" : "No tasks")
                         .font(.callout)
                         .foregroundStyle(.tertiary)
                 }
@@ -67,6 +101,15 @@ struct KanbanColumn: View {
         .padding(10)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 16))
+        .overlay {
+            RoundedRectangle(cornerRadius: 16)
+                .strokeBorder(Color.accentColor.opacity(isTargeted ? 0.6 : 0), lineWidth: 2)
+        }
+        .dropDestination(for: TaskDragItem.self) { items, _ in
+            onDrop(items, nil)
+        } isTargeted: { targeted in
+            withAnimation(.easeOut(duration: 0.15)) { isTargeted = targeted }
+        }
     }
 }
 
