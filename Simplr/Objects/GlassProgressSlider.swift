@@ -7,7 +7,7 @@ import SwiftUI
 
 /// A progress slider with a Liquid Glass thumb that stretches with drag
 /// velocity, settles with a spring, and morphs a percentage bubble out of
-/// itself while dragging.
+/// itself while dragging. Crossing quarter marks plays trackpad haptics.
 struct GlassProgressSlider: View {
     @Binding var value: Double
     var tint: Color = .accentColor
@@ -95,7 +95,9 @@ struct GlassProgressSlider: View {
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { isDragging = true }
                     onEditingChanged(true)
                 }
-                value = min(max((gesture.location.x - thumbSize / 2) / usable, 0), 1)
+                let newValue = min(max((gesture.location.x - thumbSize / 2) / usable, 0), 1)
+                ProgressHaptics.play(from: value, to: newValue)
+                value = newValue
                 withAnimation(.interactiveSpring(response: 0.2, dampingFraction: 0.6)) {
                     stretch = min(max(gesture.velocity.width / 1600, -1), 1)
                 }
@@ -111,7 +113,9 @@ struct GlassProgressSlider: View {
 
     private func step(by delta: Double) -> KeyPress.Result {
         onEditingChanged(true)
-        withAnimation(.snappy) { value = min(max(value + delta, 0), 1) }
+        let newValue = min(max(value + delta, 0), 1)
+        ProgressHaptics.play(from: value, to: newValue)
+        withAnimation(.snappy) { value = newValue }
         onEditingChanged(false)
         return .handled
     }
