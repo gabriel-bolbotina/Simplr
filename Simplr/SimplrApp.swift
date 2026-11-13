@@ -9,7 +9,7 @@ import SwiftUI
 import SwiftData
 
 @main
-struct new_swift_appApp: App {
+struct SimplrApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()

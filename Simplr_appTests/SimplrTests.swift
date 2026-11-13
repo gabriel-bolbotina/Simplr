@@ -6,9 +6,9 @@
 //
 
 import XCTest
-@testable import simplr
+@testable import Simplr
 
-final class new_swift_appTests: XCTestCase {
+final class simplr_appTests: XCTestCase {
 
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.

@@ -36,7 +36,6 @@ struct ContentView: View {
             }.padding(EdgeInsets(top: 5, leading: 0, bottom: 0, trailing: 10))
         }
         .padding()
-        .background(Color.white)
         .sheet(isPresented: $showingAddTask) {
             AddTaskView()
         }
