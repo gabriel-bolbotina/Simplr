@@ -1,5 +1,5 @@
 //
-//  AddTaskView.swift
+//  TaskEditorView.swift
 //  Simplr
 //
 //  Created by Gabriel Bolbotina on 22.04.2026.
@@ -8,26 +8,35 @@
 import SwiftUI
 import SwiftData
 
-private extension Priority {
-    var color: Color {
-        switch self {
-        case .low:    return .green
-        case .medium: return .orange
-        case .high:   return .red
-        }
-    }
-}
-
-struct AddTaskView: View {
+/// Creates a task in `board`, or edits `task` when one is passed in.
+struct TaskEditorView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Query(sort: \Category.name) private var categories: [Category]
 
     var board: Board?
+    var task: TaskItem?
 
-    @State private var title = ""
-    @State private var notes = ""
-    @State private var dueDate = Date()
-    @State private var priority: Priority = .low
+    @State private var title: String
+    @State private var notes: String
+    @State private var hasDueDate: Bool
+    @State private var dueDate: Date
+    @State private var priority: Priority
+    @State private var category: Category?
+
+    init(board: Board?, task: TaskItem? = nil) {
+        self.board = board
+        self.task = task
+        _title = State(initialValue: task?.title ?? "")
+        _notes = State(initialValue: task?.notes ?? "")
+        _hasDueDate = State(initialValue: task?.dueDate != nil)
+        _dueDate = State(initialValue: task?.dueDate ?? .now)
+        _priority = State(initialValue: task?.priority ?? .medium)
+        _category = State(initialValue: task?.category)
+    }
+
+    private var isEditing: Bool { task != nil }
+    private var trimmedTitle: String { title.trimmingCharacters(in: .whitespacesAndNewlines) }
 
     var body: some View {
         NavigationStack {
@@ -63,12 +72,40 @@ struct AddTaskView: View {
                             .font(.headline)
                             .foregroundStyle(.secondary)
 
-                        DatePicker("Due Date", selection: $dueDate, displayedComponents: .date)
-                            .datePickerStyle(.graphical)
-                            .padding()
-                            .background(.background)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                            .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+                        VStack(alignment: .leading, spacing: 12) {
+                            Toggle("Due date", isOn: $hasDueDate.animation())
+                            if hasDueDate {
+                                DatePicker("Due Date", selection: $dueDate, displayedComponents: .date)
+                                    .datePickerStyle(.graphical)
+                                    .labelsHidden()
+                            }
+                        }
+                        .padding()
+                        .background(.background)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+                    }
+
+                    // Category
+                    if !categories.isEmpty {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Label("Category", systemImage: "tag")
+                                .font(.headline)
+                                .foregroundStyle(.secondary)
+
+                            Picker("Category", selection: $category) {
+                                Text("None").tag(Category?.none)
+                                ForEach(categories) { category in
+                                    Label {
+                                        Text(category.name)
+                                    } icon: {
+                                        Image(systemName: "circle.fill").foregroundStyle(category.color)
+                                    }
+                                    .tag(Category?.some(category))
+                                }
+                            }
+                            .labelsHidden()
+                        }
                     }
 
                     // Priority
@@ -108,44 +145,52 @@ struct AddTaskView: View {
                     }
 
                     // Save button
-                    Button {
-                        let task = TaskItem(
-                            title: title,
-                            notes: notes,
-                            dueDate: dueDate,
-                            priority: priority,
-                            board: board
-                        )
-                        modelContext.insert(task)
-                        dismiss()
-                    } label: {
-                        Text("Save Reminder")
+                    Button(action: save) {
+                        Text(isEditing ? "Save Changes" : "Add Task")
                             .font(.body.weight(.semibold))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
-                            .background(title.isEmpty ? Color.blue.opacity(0.3) : Color.blue)
+                            .background(trimmedTitle.isEmpty ? Color.blue.opacity(0.3) : Color.blue)
                             .foregroundStyle(.white)
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
                     .buttonStyle(.plain)
-                    .disabled(title.isEmpty)
+                    .keyboardShortcut(.return, modifiers: .command)
+                    .disabled(trimmedTitle.isEmpty)
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 16)
                 .padding(.bottom, 32)
             }
             .background(Color.gray.opacity(0.08))
-            .navigationTitle("Add Reminder")
+            .navigationTitle(isEditing ? "Edit Task" : "New Task")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                 }
             }
         }
+        .frame(minWidth: 440, idealWidth: 480, minHeight: 560, idealHeight: 680)
+    }
+
+    private func save() {
+        guard !trimmedTitle.isEmpty else { return }
+        let target = task ?? {
+            let new = TaskItem(title: trimmedTitle, board: board)
+            new.sortOrder = (board?.tasks?.map(\.sortOrder).max() ?? -1) + 1
+            modelContext.insert(new)
+            return new
+        }()
+        target.title = trimmedTitle
+        target.notes = notes
+        target.dueDate = hasDueDate ? dueDate : nil
+        target.priority = priority
+        target.category = category
+        dismiss()
     }
 }
 
 #Preview {
-    AddTaskView()
+    TaskEditorView(board: nil)
         .modelContainer(PreviewData.container)
 }

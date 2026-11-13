@@ -44,6 +44,7 @@ struct SidebarView: View {
             }
         }
         .navigationTitle("Simplr")
+        .focusedSceneValue(\.newBoardAction, FocusedAction(id: "sidebar", perform: addBoard))
         .toolbar {
             ToolbarItem {
                 Button(action: addBoard) {
