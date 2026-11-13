@@ -254,3 +254,18 @@ struct SliderSnappingTests {
         #expect(task.status == .done)
     }
 }
+
+import SwiftUI
+
+struct ColorHexTests {
+    @Test(arguments: ["#0A84FF", "#FF9F0A", "#000000", "#FFFFFF"])
+    func hexRoundTrips(hex: String) throws {
+        let color = try #require(Color(hex: hex))
+        #expect(color.hexString == hex)
+    }
+
+    @Test(arguments: ["", "#12345", "not a colour", "#GGGGGG"])
+    func invalidHexIsRejected(hex: String) {
+        #expect(Color(hex: hex) == nil)
+    }
+}

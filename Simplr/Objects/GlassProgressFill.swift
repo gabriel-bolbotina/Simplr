@@ -9,6 +9,7 @@ import SwiftUI
 struct GlassProgressFill: View {
     var progress: Double
     var tint: Color
+    var pattern: CategoryPattern = .none
     var isActive: Bool = false
     var cornerRadius: CGFloat = 10
 
@@ -16,17 +17,19 @@ struct GlassProgressFill: View {
         GeometryReader { geo in
             let width = geo.size.width * progress
             let trailingRadius = width >= geo.size.width - 1 ? cornerRadius : 4
+            let shape = UnevenRoundedRectangle(
+                topLeadingRadius: cornerRadius,
+                bottomLeadingRadius: cornerRadius,
+                bottomTrailingRadius: trailingRadius,
+                topTrailingRadius: trailingRadius
+            )
             Color.clear
                 .frame(width: width, height: geo.size.height)
-                .glassEffect(
-                    .regular.tint(tint.opacity(isActive ? 0.55 : 0.35)),
-                    in: UnevenRoundedRectangle(
-                        topLeadingRadius: cornerRadius,
-                        bottomLeadingRadius: cornerRadius,
-                        bottomTrailingRadius: trailingRadius,
-                        topTrailingRadius: trailingRadius
-                    )
-                )
+                .overlay {
+                    CategoryPatternView(pattern: pattern, color: tint.opacity(0.35))
+                        .clipShape(shape)
+                }
+                .glassEffect(.regular.tint(tint.opacity(isActive ? 0.55 : 0.35)), in: shape)
         }
         .animation(.spring(response: 0.35, dampingFraction: 0.8), value: progress)
         .animation(.easeInOut(duration: 0.2), value: isActive)
