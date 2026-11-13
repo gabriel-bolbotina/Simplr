@@ -125,12 +125,25 @@ struct BoardListView: View {
             }
         } else {
             List(selection: $selection) {
-                ForEach(board.sortedTasks, id: \.id) { task in
-                    TaskWidget(task: task)
-                        .listRowSeparator(.hidden)
-                        .tag(task.id)
+                ForEach(TaskStatus.allCases, id: \.self) { status in
+                    let tasks = board.sortedTasks.filter { $0.status == status }
+                    if !tasks.isEmpty {
+                        Section {
+                            ForEach(tasks, id: \.id) { task in
+                                TaskWidget(task: task)
+                                    .listRowSeparator(.hidden)
+                                    .tag(task.id)
+                            }
+                        } header: {
+                            HStack {
+                                Label(status.title, systemImage: status.symbol)
+                                Text("\(tasks.count)").foregroundStyle(.tertiary)
+                            }
+                        }
+                    }
                 }
             }
+            .animation(.default, value: board.sortedTasks.map(\.status))
             .contextMenu(forSelectionType: UUID.self) { ids in
                 if let task = board.tasks?.first(where: { ids.contains($0.id) }) {
                     TaskContextMenu(task: task, actions: actions)
