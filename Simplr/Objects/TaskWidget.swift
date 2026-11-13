@@ -12,19 +12,12 @@ struct TaskWidget: View {
     @Bindable var task: TaskItem
     @State private var draftProgress: Double = 0
     @State private var isAdjusting = false
-    @State private var cardWidth: CGFloat = 300
 
     private var displayProgress: Double {
         isAdjusting ? draftProgress : task.progress
     }
 
-    private var fillColor: Color {
-        switch displayProgress {
-        case 0..<0.34: return .blue
-        case 0.34..<0.67: return .orange
-        default: return .green
-        }
-    }
+    private var tint: Color { task.tint(at: displayProgress) }
 
     /// Dragging writes to a local draft; SwiftData is updated once on release
     /// so the row doesn't jump between status sections mid-drag.
@@ -45,10 +38,7 @@ struct TaskWidget: View {
         ZStack(alignment: .leading) {
             Color.gray.opacity(0.1)
 
-            fillColor
-                .opacity(isAdjusting ? 0.3 : 0.18)
-                .frame(width: cardWidth * displayProgress)
-                .animation(.easeInOut(duration: 0.25), value: isAdjusting)
+            GlassProgressFill(progress: displayProgress, tint: tint, isActive: isAdjusting)
 
             if let category = task.category {
                 category.color
@@ -77,7 +67,7 @@ struct TaskWidget: View {
                     }
                 }.padding(.horizontal, 10)
 
-                GlassProgressSlider(value: progressBinding, tint: fillColor) { editing in
+                GlassProgressSlider(value: progressBinding, tint: tint) { editing in
                     if editing {
                         draftProgress = task.progress
                         isAdjusting = true
@@ -90,7 +80,6 @@ struct TaskWidget: View {
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: 10))
-        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { cardWidth = $0 }
     }
 }
 
