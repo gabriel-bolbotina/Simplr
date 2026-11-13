@@ -1,36 +1,149 @@
 //
-//  new_swift_appTests.swift
-//  new_swift_appTests
+//  SimplrTests.swift
+//  SimplrTests
 //
 //  Created by Gabriel Bolbotina on 27.08.2024.
 //
 
-import XCTest
+import Foundation
+import SwiftData
+import Testing
 @testable import Simplr
 
-final class simplr_appTests: XCTestCase {
+@MainActor
+struct TaskProgressTests {
+    let container: ModelContainer
+    let context: ModelContext
+    let board: Board
 
-    override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
+    init() throws {
+        container = try ModelContainer(
+            for: Board.self, TaskItem.self, Category.self, Shortcut.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        context = container.mainContext
+        board = Board(name: "Test")
+        context.insert(board)
     }
 
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
+    private func makeTask() -> TaskItem {
+        let task = TaskItem(title: "Task", board: board)
+        context.insert(task)
+        return task
     }
 
-    func testExample() throws {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-        // Any test you write for XCTest can be annotated as throws and async.
-        // Mark your test throws to produce an unexpected failure when your test encounters an uncaught error.
-        // Mark your test async to allow awaiting for asynchronous code to complete. Check the results with assertions afterwards.
+    @Test func newTaskStartsInTodoAtZero() {
+        let task = makeTask()
+        #expect(task.status == .todo)
+        #expect(task.progress == 0)
+        #expect(task.completedAt == nil)
     }
 
-    func testPerformanceExample() throws {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
-        }
+    @Test func partialProgressMovesToInProgress() {
+        let task = makeTask()
+        task.setProgress(0.4)
+        #expect(task.status == .inProgress)
+        #expect(task.progress == 0.4)
     }
 
+    @Test func fullProgressCompletesTask() {
+        let task = makeTask()
+        let now = Date(timeIntervalSince1970: 1_000)
+        task.setProgress(1, now: now)
+        #expect(task.status == .done)
+        #expect(task.progress == 1)
+        #expect(task.completedAt == now)
+    }
+
+    @Test(arguments: [(-0.5, TaskStatus.todo, 0.0), (1.5, TaskStatus.done, 1.0)])
+    func progressIsClamped(input: Double, status: TaskStatus, progress: Double) {
+        let task = makeTask()
+        task.setProgress(input)
+        #expect(task.status == status)
+        #expect(task.progress == progress)
+    }
+
+    @Test func draggingSliderBackToZeroReturnsToTodo() {
+        let task = makeTask()
+        task.setProgress(0.6)
+        task.setProgress(0)
+        #expect(task.status == .todo)
+    }
+
+    @Test func leavingDoneRestoresPreviousProgress() {
+        let task = makeTask()
+        task.setProgress(0.4)
+        task.move(to: .done)
+        task.move(to: .inProgress)
+        #expect(task.status == .inProgress)
+        #expect(task.progress == 0.4)
+        #expect(task.completedAt == nil)
+    }
+
+    @Test func movingToInProgressFromTodoKeepsZero() {
+        let task = makeTask()
+        task.move(to: .inProgress)
+        #expect(task.status == .inProgress)
+        #expect(task.progress == 0)
+    }
+
+    @Test func movingToTodoResetsProgress() {
+        let task = makeTask()
+        task.setProgress(0.7)
+        task.move(to: .todo)
+        #expect(task.status == .todo)
+        #expect(task.progress == 0)
+    }
+
+    @Test func completingTwiceKeepsFirstCompletionDate() {
+        let task = makeTask()
+        let first = Date(timeIntervalSince1970: 1_000)
+        task.move(to: .done, now: first)
+        task.move(to: .done, now: Date(timeIntervalSince1970: 2_000))
+        #expect(task.completedAt == first)
+    }
+}
+
+@MainActor
+struct RelationshipTests {
+    let container: ModelContainer
+    let context: ModelContext
+
+    init() throws {
+        container = try ModelContainer(
+            for: Board.self, TaskItem.self, Category.self, Shortcut.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        context = container.mainContext
+    }
+
+    @Test func deletingBoardDeletesTasksAndShortcuts() throws {
+        let board = Board(name: "Board")
+        let task = TaskItem(title: "Task", board: board)
+        context.insert(board)
+        context.insert(task)
+        context.insert(Shortcut(kind: .url, target: "https://apple.com", title: "Apple", task: task))
+        try context.save()
+
+        context.delete(board)
+        try context.save()
+
+        #expect(try context.fetchCount(FetchDescriptor<TaskItem>()) == 0)
+        #expect(try context.fetchCount(FetchDescriptor<Shortcut>()) == 0)
+    }
+
+    @Test func deletingCategoryKeepsTasks() throws {
+        let category = Category(name: "Work")
+        let task = TaskItem(title: "Task", category: category)
+        context.insert(category)
+        context.insert(task)
+        try context.save()
+
+        context.delete(category)
+        try context.save()
+
+        let tasks = try context.fetch(FetchDescriptor<TaskItem>())
+        #expect(tasks.count == 1)
+        #expect(tasks.first?.category == nil)
+    }
 }
