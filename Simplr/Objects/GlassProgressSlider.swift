@@ -14,10 +14,12 @@ struct GlassProgressSlider: View {
     var onEditingChanged: (Bool) -> Void = { _ in }
 
     @State private var isDragging = false
+    @State private var showsBubble = false
     @State private var stretch: CGFloat = 0
     @Namespace private var glassNamespace
 
     private let thumbSize: CGFloat = 22
+    private let lensSize = CGSize(width: 38, height: 26)
     private let trackHeight: CGFloat = 6
 
     var body: some View {
@@ -34,11 +36,12 @@ struct GlassProgressSlider: View {
                     .fill(tint.gradient)
                     .frame(width: x, height: trackHeight)
 
-                GlassEffectContainer(spacing: 10) {
+                // Wide spacing lets the lens and bubble blend into one liquid shape.
+                GlassEffectContainer(spacing: 24) {
                     ZStack {
                         thumb
                             .position(x: x, y: midY)
-                        if isDragging {
+                        if showsBubble {
                             percentBubble
                                 .position(x: bubbleX(thumbX: x, width: geo.size.width), y: midY)
                         }
@@ -50,7 +53,7 @@ struct GlassProgressSlider: View {
             .contentShape(Rectangle())
             .gesture(drag(usable: usable))
         }
-        .frame(height: 28)
+        .frame(height: 34)
         .focusable()
         .focusEffectDisabled()
         .onKeyPress(.leftArrow) { step(by: -0.05) }
@@ -62,25 +65,36 @@ struct GlassProgressSlider: View {
         }
     }
 
+    /// Solid white knob at rest (like system sliders); while held it becomes a
+    /// larger Liquid Glass lens that stretches with drag velocity.
     private var thumb: some View {
-        let grow: CGFloat = isDragging ? 1.2 : 1
         let isComplete = value >= 1
-        return Color.clear
-            .frame(
-                width: thumbSize * grow * (1 + abs(stretch) * 0.7),
-                height: thumbSize * grow * (1 - abs(stretch) * 0.25)
-            )
-            .overlay {
-                if isComplete {
-                    Image(systemName: "checkmark")
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(.white)
-                        .transition(.scale.combined(with: .opacity))
-                }
+        return ZStack {
+            if isDragging {
+                Color.clear
+                    .frame(
+                        width: lensSize.width * (1 + abs(stretch) * 0.9),
+                        height: lensSize.height * (1 - abs(stretch) * 0.3)
+                    )
+                    .glassEffect(.regular.tint(tint.opacity(0.15)).interactive(), in: Capsule())
+                    .glassEffectID("thumb", in: glassNamespace)
+                    .transition(.scale(scale: 0.6).combined(with: .opacity))
+            } else {
+                Circle()
+                    .fill(isComplete ? AnyShapeStyle(tint.gradient) : AnyShapeStyle(.white))
+                    .frame(width: thumbSize, height: thumbSize)
+                    .shadow(color: .black.opacity(0.25), radius: 2, y: 1)
+                    .overlay {
+                        if isComplete {
+                            Image(systemName: "checkmark")
+                                .font(.caption.weight(.bold))
+                                .foregroundStyle(.white)
+                        }
+                    }
+                    .transition(.scale(scale: 1.4).combined(with: .opacity))
             }
-            .glassEffect(.regular.tint(tint.opacity(isComplete ? 0.8 : 0.3)).interactive(), in: Capsule())
-            .glassEffectID("thumb", in: glassNamespace)
-            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isComplete)
+        }
+        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isComplete)
     }
 
     /// Values this close to either end snap to it, so finishing a task is easy to hit.
@@ -104,7 +118,7 @@ struct GlassProgressSlider: View {
 
     /// Keeps the bubble beside the thumb, flipping to the left near the end of the track.
     private func bubbleX(thumbX: CGFloat, width: CGFloat) -> CGFloat {
-        let offset = thumbSize + 22
+        let offset = lensSize.width / 2 + 30
         return thumbX + offset < width - 20 ? thumbX + offset : thumbX - offset
     }
 
@@ -114,17 +128,24 @@ struct GlassProgressSlider: View {
                 if !isDragging {
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { isDragging = true }
                     onEditingChanged(true)
+                    // Let the lens appear first so the bubble visibly grows out of it.
+                    Task {
+                        try? await Task.sleep(for: .milliseconds(90))
+                        guard isDragging else { return }
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.65)) { showsBubble = true }
+                    }
                 }
                 let newValue = Self.snapped((gesture.location.x - thumbSize / 2) / usable)
                 ProgressHaptics.play(from: value, to: newValue)
                 value = newValue
                 withAnimation(.interactiveSpring(response: 0.2, dampingFraction: 0.6)) {
-                    stretch = min(max(gesture.velocity.width / 1600, -1), 1)
+                    stretch = min(max(gesture.velocity.width / 700, -1), 1)
                 }
             }
             .onEnded { _ in
                 withAnimation(.spring(response: 0.45, dampingFraction: 0.45)) {
                     stretch = 0
+                    showsBubble = false
                     isDragging = false
                 }
                 onEditingChanged(false)

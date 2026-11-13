@@ -14,6 +14,7 @@ A lightweight decision log (ADR-style). Newest at the bottom. Never edit a past 
 | D-008 | 2026-11-13 | Docs in repo, work tracked on a GitHub Project | Accepted |
 | D-009 | 2026-11-13 | P0–P3 priority + T-shirt size on the board | Accepted |
 | D-010 | 2026-11-13 | Clarify D-004 for kanban moves; CloudKit-ready model | Accepted |
+| D-011 | 2026-11-13 | Card shade instead of a progress glass fill; solid knob that turns into a glass lens | Accepted |
 
 ---
 
@@ -91,3 +92,16 @@ meaningless and numeric scores would be false precision. See [Board](07-board.md
 - Leaving Done restores `progressBeforeDone`.
 - All rules live in `TaskItem.setProgress(_:)` and `TaskItem.move(to:)`; views never set `progress`/`status` directly.
 - Every model property has a default and every relationship is optional, so iCloud sync (v1.2) won't need a migration.
+
+### D-011 · Card shade instead of glass fill; knob → glass lens
+
+**Context:** Hands-on review of M2. The progress-width glass fill (G-2) competed with the title, priority and slider,
+cluttering the visual hierarchy. The clear glass thumb (G-1) was hard to see, because glass over a thin track has
+almost nothing to refract.
+**Decision:**
+- Cards get a soft, static shade in the category colour (patterns as a faint texture). The slider is the single
+  progress indicator; kanban cards keep a thin progress bar.
+- The thumb behaves like macOS system sliders: a solid white knob at rest that becomes a larger Liquid Glass lens
+  while held, with stronger velocity stretch. The % bubble appears just after the lens so it visibly grows out of it.
+**Consequences:** Glass is reserved for the interaction itself rather than for static content, as Apple's guidelines recommend.
+Supersedes the fill part of G-2.

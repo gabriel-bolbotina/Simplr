@@ -36,9 +36,7 @@ struct TaskWidget: View {
 
     var body: some View {
         ZStack(alignment: .leading) {
-            Color.gray.opacity(0.1)
-
-            GlassProgressFill(progress: displayProgress, tint: tint, pattern: task.category?.pattern ?? .none, isActive: isAdjusting)
+            CardShade(category: task.category)
 
             if let category = task.category {
                 category.color
