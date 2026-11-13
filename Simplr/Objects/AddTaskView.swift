@@ -64,7 +64,7 @@ struct AddTaskView: View {
                         DatePicker("Due Date", selection: $dueDate, displayedComponents: .date)
                             .datePickerStyle(.graphical)
                             .padding()
-                            .background(Color.white)
+                            .background(.background)
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                             .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
                     }
