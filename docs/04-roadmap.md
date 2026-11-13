@@ -59,9 +59,9 @@ each milestone:
 ```mermaid
 pie showData
     title MVP stories by status
-    "Done" : 0
+    "Done" : 3
     "In progress" : 0
-    "To do" : 22
+    "To do" : 19
 ```
 
 ## Risks

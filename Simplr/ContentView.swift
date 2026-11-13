@@ -10,34 +10,34 @@ import SwiftData
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query(sort: \TaskItem.createdAt) private var tasks: [TaskItem]
-    @State private var showingAddTask = false
+    @Query(sort: \Board.sortOrder) private var boards: [Board]
+    @State private var selection: Board?
 
     var body: some View {
-        VStack(alignment: .leading) {
-            Text("Here are today's tasks")
-                .font(.title.bold())
-                .multilineTextAlignment(.leading)
-                .padding(.leading)
-                .foregroundStyle(.blue.opacity(0.9))
-            Spacer()
-            List(tasks) { task in
-                TaskWidget(task: task)
-                    .listRowSeparator(.hidden)
+        NavigationSplitView {
+            SidebarView(boards: boards, selection: $selection)
+                .navigationSplitViewColumnWidth(min: 180, ideal: 220)
+        } detail: {
+            if let selection {
+                BoardDetailView(board: selection)
+            } else {
+                ContentUnavailableView(
+                    "No Board Selected",
+                    systemImage: "sidebar.left",
+                    description: Text("Pick a board in the sidebar to see its tasks.")
+                )
             }
-            .cornerRadius(10)
-            HStack {
-                Spacer()
-                Button(action: {
-                    showingAddTask = true
-                }) {
-                    Text("Add task")
-                }
-            }.padding(EdgeInsets(top: 5, leading: 0, bottom: 0, trailing: 10))
         }
-        .padding()
-        .sheet(isPresented: $showingAddTask) {
-            AddTaskView()
+        .onAppear(perform: ensureDefaultBoard)
+    }
+
+    private func ensureDefaultBoard() {
+        if boards.isEmpty {
+            let inbox = Board(name: "Inbox", symbol: "tray")
+            modelContext.insert(inbox)
+            selection = inbox
+        } else if selection == nil {
+            selection = boards.first
         }
     }
 }
