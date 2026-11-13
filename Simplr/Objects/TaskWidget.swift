@@ -10,18 +10,12 @@ import SwiftData
 
 struct TaskWidget: View {
     @Bindable var task: TaskItem
-    @State private var isEditing = false
-    @State private var localProgress: Double
+    @State private var draftProgress: Double = 0
+    @State private var isAdjusting = false
     @State private var cardWidth: CGFloat = 300
-    @State private var holdWork: DispatchWorkItem?
-
-    init(task: TaskItem) {
-        self.task = task
-        self._localProgress = State(initialValue: task.progress)
-    }
 
     private var displayProgress: Double {
-        isEditing ? localProgress : task.progress
+        isAdjusting ? draftProgress : task.progress
     }
 
     private var fillColor: Color {
@@ -32,21 +26,36 @@ struct TaskWidget: View {
         }
     }
 
+    /// Dragging writes to a local draft; SwiftData is updated once on release
+    /// so the row doesn't jump between status sections mid-drag.
+    private var progressBinding: Binding<Double> {
+        Binding(
+            get: { displayProgress },
+            set: { newValue in
+                if isAdjusting {
+                    draftProgress = newValue
+                } else {
+                    task.setProgress(newValue)
+                }
+            }
+        )
+    }
+
     var body: some View {
         ZStack(alignment: .leading) {
             Color.gray.opacity(0.1)
 
             fillColor
-                .opacity(isEditing ? 0.45 : 0.18)
+                .opacity(isAdjusting ? 0.3 : 0.18)
                 .frame(width: cardWidth * displayProgress)
-                .animation(.easeInOut(duration: 0.25), value: isEditing)
+                .animation(.easeInOut(duration: 0.25), value: isAdjusting)
 
             if let category = task.category {
                 category.color
                     .frame(width: 4)
             }
 
-            VStack(alignment: .leading) {
+            VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Text(task.title).font(.title2).multilineTextAlignment(.leading)
                         .foregroundStyle(task.status == .done ? .secondary : .primary)
@@ -66,39 +75,22 @@ struct TaskWidget: View {
                             Text("\(days) days remaining").font(.subheadline).foregroundStyle(.gray)
                         }
                     }
-                }.padding(EdgeInsets(top: 0, leading: 10, bottom: 8, trailing: 10))
+                }.padding(.horizontal, 10)
+
+                GlassProgressSlider(value: progressBinding, tint: fillColor) { editing in
+                    if editing {
+                        draftProgress = task.progress
+                        isAdjusting = true
+                    } else {
+                        isAdjusting = false
+                        task.setProgress(draftProgress)
+                    }
+                }
+                .padding(EdgeInsets(top: 0, leading: 10, bottom: 6, trailing: 10))
             }
-            .opacity(isEditing ? 0 : 1)
-            .animation(.easeInOut(duration: 0.2), value: isEditing)
         }
         .clipShape(RoundedRectangle(cornerRadius: 10))
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { cardWidth = $0 }
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0, coordinateSpace: .local)
-                .onChanged { value in
-                    if isEditing {
-                        // Already in edit mode — update local buffer, no SwiftData write yet
-                        localProgress = max(0, min(1, value.location.x / cardWidth))
-                    } else if holdWork == nil {
-                        // First touch — schedule hold activation after 0.35 s
-                        let work = DispatchWorkItem {
-                            localProgress = task.progress
-                            withAnimation(.easeInOut(duration: 0.2)) { isEditing = true }
-                        }
-                        holdWork = work
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35, execute: work)
-                    }
-                }
-                .onEnded { _ in
-                    holdWork?.cancel()
-                    holdWork = nil
-                    if isEditing {
-                        // Single SwiftData write on release
-                        task.setProgress(localProgress)
-                        withAnimation(.easeInOut(duration: 0.2)) { isEditing = false }
-                    }
-                }
-        )
     }
 }
 
