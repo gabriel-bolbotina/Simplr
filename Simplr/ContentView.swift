@@ -21,8 +21,11 @@ struct ContentView: View {
             if let selection {
                 BoardDetailView(board: selection)
             } else {
-                // TODO(F-3): empty state for "no board selected"
-                Text("Select a board")
+                ContentUnavailableView(
+                    "No Board Selected",
+                    systemImage: "sidebar.left",
+                    description: Text("Pick a board in the sidebar to see its tasks.")
+                )
             }
         }
         .onAppear(perform: ensureDefaultBoard)

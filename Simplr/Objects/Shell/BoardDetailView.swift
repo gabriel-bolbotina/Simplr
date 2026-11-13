@@ -14,7 +14,9 @@ struct BoardDetailView: View {
         Group {
             switch board.preferredView {
             case .list:
-                BoardListView(board: board)
+                BoardListView(board: board) {
+                    showingAddTask = true
+                }
             case .kanban:
                 ContentUnavailableView(
                     "Kanban is coming",
@@ -32,12 +34,14 @@ struct BoardDetailView: View {
                 }
                 .pickerStyle(.segmented)
             }
+            ToolbarSpacer(.flexible)
             ToolbarItem(placement: .primaryAction) {
                 Button {
                     showingAddTask = true
                 } label: {
                     Label("New Task", systemImage: "plus")
                 }
+                .buttonStyle(.glassProminent)
             }
         }
         .sheet(isPresented: $showingAddTask) {
@@ -48,12 +52,23 @@ struct BoardDetailView: View {
 
 struct BoardListView: View {
     let board: Board
+    var onAddTask: () -> Void
 
     var body: some View {
-        // TODO(F-3): empty state for a board without tasks
-        List(board.sortedTasks, id: \.id) { task in
-            TaskWidget(task: task)
-                .listRowSeparator(.hidden)
+        if board.sortedTasks.isEmpty {
+            ContentUnavailableView {
+                Label("No Tasks Yet", systemImage: "checklist")
+            } description: {
+                Text("Add your first task to \(board.name).")
+            } actions: {
+                Button("New Task", action: onAddTask)
+                    .buttonStyle(.glassProminent)
+            }
+        } else {
+            List(board.sortedTasks, id: \.id) { task in
+                TaskWidget(task: task)
+                    .listRowSeparator(.hidden)
+            }
         }
     }
 }
