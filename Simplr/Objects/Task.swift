@@ -6,88 +6,41 @@
 //
 
 import Foundation
-import AppKit
+import SwiftData
 
-enum Priority{
-  case low
-  case medium
-  case high
+enum Priority: String, Codable, CaseIterable {
+    case low = "Low"
+    case medium = "Medium"
+    case high = "High"
 }
 
-struct TaskObject{
-  //variables
-  private var title: String
-  private var description: String
-  private var dueDate: String
-  private var priority: Priority
-  private var status: Bool
+@Model
+class TaskObject {
+    var id: UUID
+    var title: String
+    var taskDescription: String
+    var dueDate: Date
+    var priority: Priority
+    var status: Bool
+    var progress: Double
 
-  init(title: String, description: String, dueDate: String, priority: Priority) {
-    self.title = title
-    self.description = description
-    self.dueDate = dueDate
-    self.priority = priority
-    self.status = false
-  }
-  
-  // getters
-  
-  func getTitle() -> String {
-    return self.title
-  }
-  
-  func getDescription() -> String {
-    return self.description
-  }
-  
-  func getDueDate() -> Date {
-    return getDate(self.dueDate)
-  }
-  
-  func getPriority() -> String {
-    if self.priority == .low {
-      return "Low"
+    init(title: String, taskDescription: String, dueDate: Date, priority: Priority) {
+        self.id = UUID()
+        self.title = title
+        self.taskDescription = taskDescription
+        self.dueDate = dueDate
+        self.priority = priority
+        self.status = false
+        self.progress = 0.0
     }
-    else if self.priority == .medium {
-      return "Medium"
-    }
-    else if self.priority == .high {
-      return "High"
-    }
-    return ""
-  }
-  
-  func getRemainingDays() -> Int {
-    let calendar = Calendar.current
-    let dateComponents = calendar.dateComponents([.day], from: Date(), to: getDate(self.dueDate))
-    return (dateComponents.day!)
-  }
-  
-  mutating func setStatus(_ status: Bool) {
-    self.status = status
-  }
-  
-  
-  func dateFormatter(_ dateString: String, dateFormat: String = "dd.MM.yyyy") -> Date? {
-      let formatter = DateFormatter()
-      formatter.dateFormat = dateFormat
 
-      // Check if the dateString is empty
-      if dateString.isEmpty {
-          return nil // Or return Date() if you want to return the current date
-      }
+    func getPriority() -> String {
+        return priority.rawValue
+    }
 
-      // Attempt to create a Date from the dateString
-      return formatter.date(from: dateString)
-  }
-  
-  func getDate(_ dateString: String) -> Date {
-      if let date = dateFormatter(dateString) {
-          return date
-      } else {
-          // Return a default date or handle the error
-          return Date()
-      }
-  }
-  
+    func getRemainingDays() -> Int {
+        let calendar = Calendar.current
+        let components = calendar.dateComponents([.day], from: Date(), to: dueDate)
+        return components.day ?? 0
+    }
 }
