@@ -22,8 +22,10 @@ struct AddTaskView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
+    var board: Board?
+
     @State private var title = ""
-    @State private var taskDescription = ""
+    @State private var notes = ""
     @State private var dueDate = Date()
     @State private var priority: Priority = .low
 
@@ -46,7 +48,7 @@ struct AddTaskView: View {
 
                             Divider().padding(.leading)
 
-                            TextField("Description", text: $taskDescription, axis: .vertical)
+                            TextField("Description", text: $notes, axis: .vertical)
                                 .font(.body)
                                 .lineLimit(3...6)
                                 .padding()
@@ -107,11 +109,12 @@ struct AddTaskView: View {
 
                     // Save button
                     Button {
-                        let task = TaskObject(
+                        let task = TaskItem(
                             title: title,
-                            taskDescription: taskDescription,
+                            notes: notes,
                             dueDate: dueDate,
-                            priority: priority
+                            priority: priority,
+                            board: board
                         )
                         modelContext.insert(task)
                         dismiss()
@@ -144,5 +147,5 @@ struct AddTaskView: View {
 
 #Preview {
     AddTaskView()
-        .modelContainer(for: TaskObject.self, inMemory: true)
+        .modelContainer(PreviewData.container)
 }

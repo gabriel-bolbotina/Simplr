@@ -13,6 +13,7 @@ A lightweight decision log (ADR-style). Newest at the bottom. Never edit a past 
 | D-007 | 2026-11-13 | Use `KeyboardShortcuts` package for the global hotkey | Proposed |
 | D-008 | 2026-11-13 | Docs in repo, work tracked on a GitHub Project | Accepted |
 | D-009 | 2026-11-13 | P0–P3 priority + T-shirt size on the board | Accepted |
+| D-010 | 2026-11-13 | Clarify D-004 for kanban moves; CloudKit-ready model | Accepted |
 
 ---
 
@@ -80,3 +81,13 @@ included). Execution is tracked on a public GitHub Project; one issue per user s
 **Decision:** Two project fields — Priority (P0–P3) and Size (XS–XL). RICE/ICE rejected: with one user, *Reach* is
 meaningless and numeric scores would be false precision. See [Board](07-board.md#prioritisation).
 **Consequences:** Simple to sort and maintain; XL items must be split before work starts.
+
+### D-010 · Kanban moves & a CloudKit-ready model
+
+**Context:** Implementing F-2 surfaced a gap in D-004: dragging a card from To Do to In Progress leaves it at 0 %.
+**Decision:**
+- The slider path stays strict (0 % → To Do, 1–99 % → In Progress, 100 % → Done).
+- The kanban path may put a task In Progress at 0 % ("started, no progress yet"). To Do always means 0 %, Done always 100 %.
+- Leaving Done restores `progressBeforeDone`.
+- All rules live in `TaskItem.setProgress(_:)` and `TaskItem.move(to:)`; views never set `progress`/`status` directly.
+- Every model property has a default and every relationship is optional, so iCloud sync (v1.2) won't need a migration.

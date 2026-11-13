@@ -10,7 +10,7 @@ import SwiftData
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var tasks: [TaskObject]
+    @Query(sort: \TaskItem.createdAt) private var tasks: [TaskItem]
     @State private var showingAddTask = false
 
     var body: some View {
@@ -44,5 +44,5 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
-        .modelContainer(for: TaskObject.self, inMemory: true)
+        .modelContainer(PreviewData.container)
 }

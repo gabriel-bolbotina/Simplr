@@ -9,13 +9,13 @@ import SwiftUI
 import SwiftData
 
 struct TaskWidget: View {
-    @Bindable var task: TaskObject
+    @Bindable var task: TaskItem
     @State private var isEditing = false
     @State private var localProgress: Double
     @State private var cardWidth: CGFloat = 300
     @State private var holdWork: DispatchWorkItem?
 
-    init(task: TaskObject) {
+    init(task: TaskItem) {
         self.task = task
         self._localProgress = State(initialValue: task.progress)
     }
@@ -44,18 +44,19 @@ struct TaskWidget: View {
             VStack(alignment: .leading) {
                 HStack {
                     Text(task.title).font(.title2).multilineTextAlignment(.leading)
-                    Text(task.getPriority()).font(.title3.bold()).foregroundStyle(.red)
+                    Text(task.priority.rawValue).font(.title3.bold()).foregroundStyle(.red)
                 }.padding(EdgeInsets(top: 5, leading: 10, bottom: 0, trailing: 10))
 
-                let days = task.getRemainingDays()
                 HStack {
-                    Text(task.taskDescription).font(.caption)
+                    Text(task.notes).font(.caption)
                         .padding(EdgeInsets(top: 0, leading: 15, bottom: 0, trailing: 0))
                     Spacer(minLength: 1)
-                    if days < 0 {
-                        Text("\(abs(days)) days due").font(.subheadline).foregroundStyle(.red)
-                    } else {
-                        Text("\(days) days remaining").font(.subheadline).foregroundStyle(.gray)
+                    if let days = task.remainingDays {
+                        if days < 0 {
+                            Text("\(abs(days)) days due").font(.subheadline).foregroundStyle(.red)
+                        } else {
+                            Text("\(days) days remaining").font(.subheadline).foregroundStyle(.gray)
+                        }
                     }
                 }.padding(EdgeInsets(top: 0, leading: 10, bottom: 8, trailing: 10))
             }
@@ -89,7 +90,7 @@ struct TaskWidget: View {
                     holdWork = nil
                     if isEditing {
                         // Single SwiftData write on release
-                        task.progress = localProgress
+                        task.setProgress(localProgress)
                         withAnimation(.easeInOut(duration: 0.2)) { isEditing = false }
                     }
                 }
