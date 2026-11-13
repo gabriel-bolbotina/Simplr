@@ -12,6 +12,7 @@ A lightweight decision log (ADR-style). Newest at the bottom. Never edit a past 
 | D-006 | 2026-11-13 | Streak is derived, not stored | Accepted |
 | D-007 | 2026-11-13 | Use `KeyboardShortcuts` package for the global hotkey | Proposed |
 | D-008 | 2026-11-13 | Docs in repo, work tracked on a GitHub Project | Accepted |
+| D-009 | 2026-11-13 | P0–P3 priority + T-shirt size on the board | Accepted |
 
 ---
 
@@ -72,3 +73,10 @@ consecutive counted days ending today or yesterday. Computed, not stored.
 
 **Decision:** Product docs live in `docs/` as Markdown (versioned with the code, rendered by GitHub, Mermaid charts
 included). Execution is tracked on a public GitHub Project; one issue per user story.
+
+### D-009 · P0–P3 priority + T-shirt size
+
+**Context:** MoSCoW says what's in the release, not what to work on next. Options considered: P0–P3 + Size, RICE, ICE.
+**Decision:** Two project fields — Priority (P0–P3) and Size (XS–XL). RICE/ICE rejected: with one user, *Reach* is
+meaningless and numeric scores would be false precision. See [Board](07-board.md#prioritisation).
+**Consequences:** Simple to sort and maintain; XL items must be split before work starts.

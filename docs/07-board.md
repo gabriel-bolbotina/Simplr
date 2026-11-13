@@ -10,7 +10,37 @@ Work is tracked on a public **GitHub Project** linked to this repo. One issue pe
 | **Milestones** (repo) | `M0 Foundation` … `M5 Hooked & ship` — one per roadmap milestone |
 | **Labels** | Area: `area:foundation`, `area:boards`, `area:glass`, `area:shortcuts`, `area:mac`, `area:hooked`, `area:showcase` · Priority: `must`, `should`, `could` · Type: `feature`, `chore`, `docs` |
 | **Status** (project field) | Todo → In Progress → Done |
+| **Priority** (project field) | P0 Blocker · P1 High · P2 Medium · P3 Low — see below |
+| **Size** (project field) | XS · S · M · L · XL — see below |
 | **Views** | **Board** (by Status) · **Roadmap** (by Milestone) · **Table** (all fields) · **Insights** chart |
+
+## Prioritisation
+
+Two layers, two questions:
+
+- **MoSCoW label** (`must` / `should` / `could`): *is it in the release?* Set during scoping, rarely changes.
+- **Priority field**: *what do I pick up next?* Re-checked at the start of every milestone.
+
+| Priority | Meaning | Rule of thumb |
+|---|---|---|
+| **P0 Blocker** | Other work can't start without it | Do first, never more than one P0 in progress |
+| **P1 High** | Core MVP value — the reason the milestone exists | Bulk of each milestone |
+| **P2 Medium** | In the MVP, but can slip to the end of the milestone | Pick up when P0/P1 are done or blocked |
+| **P3 Low** | Polish / showcase | Last; first to cut |
+
+| Size | Effort (at ~5 h/week) | |
+|---|---|---|
+| **XS** | < 1 h | a single sitting |
+| **S** | 1–2 h | one session |
+| **M** | 2–5 h | about a week |
+| **L** | 5–10 h | about two weeks — consider splitting |
+| **XL** | > 10 h | must be split into sub-issues before starting |
+
+**Picking the next ticket:** current milestone → highest Priority → smallest Size. Board and table views sort by
+`Milestone ↑, Priority ↑, Size ↑`.
+
+**Triage of new ideas:** every new issue gets a MoSCoW label, a Priority and a Size before it leaves *Todo*. A new idea
+defaults to `could` + P3 and must argue its way up.
 
 ## Charts
 
