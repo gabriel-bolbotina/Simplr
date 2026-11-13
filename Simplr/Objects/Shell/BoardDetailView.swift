@@ -21,11 +21,7 @@ struct BoardDetailView: View {
             case .list:
                 BoardListView(board: board, selection: $selectedTaskID, actions: actions)
             case .kanban:
-                ContentUnavailableView(
-                    "Kanban is coming",
-                    systemImage: "rectangle.split.3x1",
-                    description: Text("Tracked in B-4.")
-                )
+                KanbanView(board: board, selection: $selectedTaskID, actions: actions)
             }
         }
         .navigationTitle(board.name)
