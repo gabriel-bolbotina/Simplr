@@ -12,7 +12,7 @@ import SwiftData
 struct TaskEditorView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @Query(sort: \Category.name) private var categories: [Category]
+    @Query(sort: \Category.sortOrder) private var categories: [Category]
 
     var board: Board?
     var task: TaskItem?
@@ -87,12 +87,23 @@ struct TaskEditorView: View {
                     }
 
                     // Category
-                    if !categories.isEmpty {
-                        VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
                             Label("Category", systemImage: "tag")
                                 .font(.headline)
                                 .foregroundStyle(.secondary)
+                            Spacer()
+                            SettingsLink {
+                                Text("Manage Categories…")
+                            }
+                            .buttonStyle(.link)
+                            .font(.caption)
+                        }
 
+                        if categories.isEmpty {
+                            Text("No categories yet.")
+                                .foregroundStyle(.secondary)
+                        } else {
                             Picker("Category", selection: $category) {
                                 Text("None").tag(Category?.none)
                                 ForEach(categories) { category in

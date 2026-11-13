@@ -38,7 +38,7 @@ struct TaskWidget: View {
         ZStack(alignment: .leading) {
             Color.gray.opacity(0.1)
 
-            GlassProgressFill(progress: displayProgress, tint: tint, isActive: isAdjusting)
+            GlassProgressFill(progress: displayProgress, tint: tint, pattern: task.category?.pattern ?? .none, isActive: isAdjusting)
 
             if let category = task.category {
                 category.color

@@ -162,7 +162,12 @@ struct KanbanCard: View {
         .background {
             ZStack {
                 RoundedRectangle(cornerRadius: 12).fill(.background)
-                GlassProgressFill(progress: task.progress, tint: task.tint(at: task.progress), cornerRadius: 12)
+                GlassProgressFill(
+                    progress: task.progress,
+                    tint: task.tint(at: task.progress),
+                    pattern: task.category?.pattern ?? .none,
+                    cornerRadius: 12
+                )
             }
         }
         .overlay {

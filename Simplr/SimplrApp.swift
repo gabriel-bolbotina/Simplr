@@ -10,6 +10,15 @@ import SwiftData
 
 @main
 struct SimplrApp: App {
+    /// One container shared by every scene, so edits in Settings show up in the main window immediately.
+    let container: ModelContainer = {
+        do {
+            return try ModelContainer(for: Board.self, TaskItem.self, Category.self, Shortcut.self)
+        } catch {
+            fatalError("Couldn't open the data store: \(error)")
+        }
+    }()
+
     var body: some Scene {
         WindowGroup {
             ContentView()
@@ -17,6 +26,11 @@ struct SimplrApp: App {
         }
         .defaultSize(width: 1000, height: 680)
         .commands { AppCommands() }
-        .modelContainer(for: [Board.self, TaskItem.self, Category.self, Shortcut.self])
+        .modelContainer(container)
+
+        Settings {
+            SettingsView()
+        }
+        .modelContainer(container)
     }
 }
