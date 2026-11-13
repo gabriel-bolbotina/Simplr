@@ -215,3 +215,28 @@ struct KanbanPlacementTests {
         #expect(column(.todo) == ["A", "B"])
     }
 }
+
+struct ProgressHapticsTests {
+    @Test(arguments: [(0.2, 0.3), (0.3, 0.2), (0.6, 0.4), (0.8, 0.7)])
+    func crossingAQuarterTicks(from: Double, to: Double) {
+        #expect(ProgressHaptics.feedback(from: from, to: to) == .milestone)
+    }
+
+    @Test(arguments: [(0.3, 0.4), (0.0, 0.1), (0.76, 0.99)])
+    func movingWithinAQuarterIsSilent(from: Double, to: Double) {
+        #expect(ProgressHaptics.feedback(from: from, to: to) == nil)
+    }
+
+    @Test func reachingFullIsComplete() {
+        #expect(ProgressHaptics.feedback(from: 0.9, to: 1) == .complete)
+        #expect(ProgressHaptics.feedback(from: 0.1, to: 1) == .complete)
+    }
+
+    @Test func leavingFullWithoutCrossingAQuarterIsSilent() {
+        #expect(ProgressHaptics.feedback(from: 1, to: 0.9) == nil)
+    }
+
+    @Test func jumpingOverSeveralQuartersTicksOnce() {
+        #expect(ProgressHaptics.feedback(from: 0.1, to: 0.8) == .milestone)
+    }
+}
