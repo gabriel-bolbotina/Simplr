@@ -42,7 +42,7 @@ struct AddTaskView: View {
                             TextField("Title", text: $title)
                                 .font(.body)
                                 .padding()
-                                .background(Color.white)
+                                .background(.background)
 
                             Divider().padding(.leading)
 
@@ -50,7 +50,6 @@ struct AddTaskView: View {
                                 .font(.body)
                                 .lineLimit(3...6)
                                 .padding()
-                                .background(Color.white)
                         }
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                         .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
