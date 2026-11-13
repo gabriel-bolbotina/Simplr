@@ -14,6 +14,6 @@ struct SimplrApp: App {
         WindowGroup {
             ContentView()
         }
-        .modelContainer(for: TaskObject.self)
+        .modelContainer(for: [Board.self, TaskItem.self, Category.self, Shortcut.self])
     }
 }
