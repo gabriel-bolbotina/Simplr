@@ -138,15 +138,17 @@ struct KanbanCard: View {
                     .lineLimit(2)
             }
 
-            ProgressView(value: task.progress)
-                .tint(task.category?.color ?? .accentColor)
-
             HStack(spacing: 8) {
                 if let category = task.category {
                     Label(category.name, systemImage: "circle.fill")
                         .foregroundStyle(category.color)
                 }
                 Spacer(minLength: 0)
+                if task.progress > 0 && task.progress < 1 {
+                    Text(task.progress, format: .percent.precision(.fractionLength(0)))
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                }
                 if let days = task.remainingDays {
                     Text(days < 0 ? "\(abs(days))d overdue" : "\(days)d left")
                         .foregroundStyle(days < 0 ? .red : .secondary)
@@ -157,7 +159,12 @@ struct KanbanCard: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.background, in: RoundedRectangle(cornerRadius: 12))
+        .background {
+            ZStack {
+                RoundedRectangle(cornerRadius: 12).fill(.background)
+                GlassProgressFill(progress: task.progress, tint: task.tint(at: task.progress), cornerRadius: 12)
+            }
+        }
         .overlay {
             RoundedRectangle(cornerRadius: 12)
                 .strokeBorder(isSelected ? Color.accentColor : .clear, lineWidth: 2)
