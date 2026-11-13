@@ -240,3 +240,17 @@ struct ProgressHapticsTests {
         #expect(ProgressHaptics.feedback(from: 0.1, to: 0.8) == .milestone)
     }
 }
+
+struct SliderSnappingTests {
+    @Test(arguments: [(0.98, 1.0), (1.2, 1.0), (0.02, 0.0), (-0.3, 0.0), (0.5, 0.5), (0.96, 0.96)])
+    func snapsNearTheEnds(input: Double, expected: Double) {
+        #expect(GlassProgressSlider.snapped(input) == expected)
+    }
+
+    @MainActor
+    @Test func releasingAtFullCompletesTheTask() {
+        let task = TaskItem(title: "Task")
+        task.setProgress(GlassProgressSlider.snapped(0.985))
+        #expect(task.status == .done)
+    }
+}

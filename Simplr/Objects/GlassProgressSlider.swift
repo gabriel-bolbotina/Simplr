@@ -64,13 +64,33 @@ struct GlassProgressSlider: View {
 
     private var thumb: some View {
         let grow: CGFloat = isDragging ? 1.2 : 1
+        let isComplete = value >= 1
         return Color.clear
             .frame(
                 width: thumbSize * grow * (1 + abs(stretch) * 0.7),
                 height: thumbSize * grow * (1 - abs(stretch) * 0.25)
             )
-            .glassEffect(.regular.tint(tint.opacity(0.3)).interactive(), in: Capsule())
+            .overlay {
+                if isComplete {
+                    Image(systemName: "checkmark")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(.white)
+                        .transition(.scale.combined(with: .opacity))
+                }
+            }
+            .glassEffect(.regular.tint(tint.opacity(isComplete ? 0.8 : 0.3)).interactive(), in: Capsule())
             .glassEffectID("thumb", in: glassNamespace)
+            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isComplete)
+    }
+
+    /// Values this close to either end snap to it, so finishing a task is easy to hit.
+    nonisolated static let snapDistance = 0.03
+
+    nonisolated static func snapped(_ value: Double) -> Double {
+        let clamped = min(max(value, 0), 1)
+        if clamped >= 1 - snapDistance { return 1 }
+        if clamped <= snapDistance { return 0 }
+        return clamped
     }
 
     private var percentBubble: some View {
@@ -95,7 +115,7 @@ struct GlassProgressSlider: View {
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { isDragging = true }
                     onEditingChanged(true)
                 }
-                let newValue = min(max((gesture.location.x - thumbSize / 2) / usable, 0), 1)
+                let newValue = Self.snapped((gesture.location.x - thumbSize / 2) / usable)
                 ProgressHaptics.play(from: value, to: newValue)
                 value = newValue
                 withAnimation(.interactiveSpring(response: 0.2, dampingFraction: 0.6)) {
@@ -113,7 +133,7 @@ struct GlassProgressSlider: View {
 
     private func step(by delta: Double) -> KeyPress.Result {
         onEditingChanged(true)
-        let newValue = min(max(value + delta, 0), 1)
+        let newValue = Self.snapped(value + delta)
         ProgressHaptics.play(from: value, to: newValue)
         withAnimation(.snappy) { value = newValue }
         onEditingChanged(false)
