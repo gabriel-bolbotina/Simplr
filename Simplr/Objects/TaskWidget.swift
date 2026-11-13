@@ -41,10 +41,18 @@ struct TaskWidget: View {
                 .frame(width: cardWidth * displayProgress)
                 .animation(.easeInOut(duration: 0.25), value: isEditing)
 
+            if let category = task.category {
+                category.color
+                    .frame(width: 4)
+            }
+
             VStack(alignment: .leading) {
                 HStack {
                     Text(task.title).font(.title2).multilineTextAlignment(.leading)
-                    Text(task.priority.rawValue).font(.title3.bold()).foregroundStyle(.red)
+                        .foregroundStyle(task.status == .done ? .secondary : .primary)
+                    Text(task.priority.rawValue).font(.title3.bold()).foregroundStyle(task.priority.color)
+                    Spacer(minLength: 8)
+                    ShortcutIcons(shortcuts: task.shortcuts ?? [])
                 }.padding(EdgeInsets(top: 5, leading: 10, bottom: 0, trailing: 10))
 
                 HStack {
@@ -64,11 +72,7 @@ struct TaskWidget: View {
             .animation(.easeInOut(duration: 0.2), value: isEditing)
         }
         .clipShape(RoundedRectangle(cornerRadius: 10))
-        .background(
-            GeometryReader { geo in
-                Color.clear.onAppear { cardWidth = geo.size.width }
-            }
-        )
+        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { cardWidth = $0 }
         .simultaneousGesture(
             DragGesture(minimumDistance: 0, coordinateSpace: .local)
                 .onChanged { value in
@@ -95,5 +99,20 @@ struct TaskWidget: View {
                     }
                 }
         )
+    }
+}
+
+/// Small icons for a task's shortcuts. Real app icons and favicons arrive with S-1/S-2.
+struct ShortcutIcons: View {
+    let shortcuts: [Shortcut]
+
+    var body: some View {
+        HStack(spacing: 6) {
+            ForEach(shortcuts.sorted { $0.sortOrder < $1.sortOrder }, id: \.id) { shortcut in
+                Image(systemName: shortcut.kind == .url ? "globe" : "app.dashed")
+                    .foregroundStyle(.secondary)
+                    .help(shortcut.title)
+            }
+        }
     }
 }
