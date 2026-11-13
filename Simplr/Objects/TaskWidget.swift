@@ -69,7 +69,7 @@ struct TaskWidget: View {
                 Color.clear.onAppear { cardWidth = geo.size.width }
             }
         )
-        .gesture(
+        .simultaneousGesture(
             DragGesture(minimumDistance: 0, coordinateSpace: .local)
                 .onChanged { value in
                     if isEditing {
