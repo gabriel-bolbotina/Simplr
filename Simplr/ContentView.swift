@@ -12,6 +12,7 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Board.sortOrder) private var boards: [Board]
     @State private var selection: Board?
+    @AppStorage("didCreateInbox") private var didCreateInbox = false
 
     var body: some View {
         NavigationSplitView {
@@ -32,13 +33,15 @@ struct ContentView: View {
     }
 
     private func ensureDefaultBoard() {
-        if boards.isEmpty {
+        // Only seed once, so deleting every board leaves the empty state instead.
+        if boards.isEmpty && !didCreateInbox {
             let inbox = Board(name: "Inbox", symbol: "tray")
             modelContext.insert(inbox)
             selection = inbox
         } else if selection == nil {
             selection = boards.first
         }
+        didCreateInbox = true
     }
 }
 
